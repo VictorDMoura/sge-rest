@@ -12,10 +12,24 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import com.sgerest.exception.ApiErrorResponse;
+import com.sgerest.exception.TituloAlreadyExistsException;
 
 @ControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(TituloAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleTituloAlreadyExists(
+            TituloAlreadyExistsException ex, WebRequest request) {
+        log.error("Titulo already exists exception", ex);
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(

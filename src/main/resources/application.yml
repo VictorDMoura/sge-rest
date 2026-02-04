@@ -12,5 +12,8 @@ server:
 
 
 logging:
+  level:
+    root: WARN
+    com.sgerest: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{HH:mm:ss} - %msg%n"

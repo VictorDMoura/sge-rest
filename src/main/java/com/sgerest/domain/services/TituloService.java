@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.entities.TituloEntity;
 import com.sgerest.domain.repository.TituloRepository;
+import com.sgerest.exception.TituloAlreadyExistsException;
 
 @Service
 @Log4j2
@@ -25,7 +26,7 @@ public class TituloService {
 
         if (tituloRepository.existsByDescricaoIgnoreCase(descricao)) {
             log.warn("Título com descrição '{}' já existe.", descricao);
-            throw new IllegalArgumentException("Título já existe.");
+            throw new TituloAlreadyExistsException(descricao);
         }
 
         TituloEntity titulo = new TituloEntity();

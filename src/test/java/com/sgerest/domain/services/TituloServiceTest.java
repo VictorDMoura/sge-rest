@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.entities.TituloEntity;
 import com.sgerest.domain.repository.TituloRepository;
+import com.sgerest.exception.TituloAlreadyExistsException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Testes do TituloService")
@@ -67,10 +68,10 @@ class TituloServiceTest {
     void testCadastrarTituloExistente() {
         String descricaoExistente = "Título Existente";
         when(tituloRepository.existsByDescricaoIgnoreCase(descricaoExistente)).thenReturn(true);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        TituloAlreadyExistsException exception = assertThrows(TituloAlreadyExistsException.class, () -> {
             tituloService.cadastrar(descricaoExistente);
         });
-        assertEquals("Título já existe.", exception.getMessage());
+        assertEquals("Título com descrição 'Título Existente' já existe.", exception.getMessage());
         verify(tituloRepository, never()).save(any(TituloEntity.class));
     }
 }
