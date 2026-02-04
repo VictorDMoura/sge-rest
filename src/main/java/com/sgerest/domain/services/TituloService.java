@@ -21,6 +21,12 @@ public class TituloService {
 
     @Transactional(rollbackOn = Exception.class)
     public TituloDTOResponse cadastrar(String descricao) {
+        log.info("Cadastrando título com descrição: {}", descricao);
+
+        if (tituloRepository.existsByDescricaoIgnoreCase(descricao)) {
+            log.warn("Título com descrição '{}' já existe.", descricao);
+            throw new IllegalArgumentException("Título já existe.");
+        }
 
         TituloEntity titulo = new TituloEntity();
         titulo.setDescricao(descricao);
@@ -28,7 +34,7 @@ public class TituloService {
         TituloEntity tituloPersistido = tituloRepository.save(titulo);
 
         TituloDTOResponse response = new TituloDTOResponse(tituloPersistido.getId(), tituloPersistido.getDescricao());
-        log.info("Cadastrando título: {}", descricao);
+        log.info("Título cadastrado com sucesso. ID: {}", response.id());
         return response;
     }
 

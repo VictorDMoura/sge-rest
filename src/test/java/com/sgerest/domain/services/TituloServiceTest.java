@@ -61,4 +61,16 @@ class TituloServiceTest {
 
         assertEquals(1L, response.id());
     }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao tentar cadastrar título já existente")
+    void testCadastrarTituloExistente() {
+        String descricaoExistente = "Título Existente";
+        when(tituloRepository.existsByDescricaoIgnoreCase(descricaoExistente)).thenReturn(true);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            tituloService.cadastrar(descricaoExistente);
+        });
+        assertEquals("Título já existe.", exception.getMessage());
+        verify(tituloRepository, never()).save(any(TituloEntity.class));
+    }
 }

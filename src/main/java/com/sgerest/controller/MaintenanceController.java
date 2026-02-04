@@ -8,8 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.Map;
-
 import com.sgerest.controller.DTO.maintenance.MigrationResponse;
 import com.sgerest.domain.services.DatabaseMigrationService;
 import com.sgerest.exception.ApiErrorResponse;
