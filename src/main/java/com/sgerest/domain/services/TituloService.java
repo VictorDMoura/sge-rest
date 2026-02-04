@@ -1,5 +1,6 @@
 package com.sgerest.domain.services;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.stereotype.Service;
@@ -18,17 +19,16 @@ public class TituloService {
         this.tituloRepository = tituloRepository;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public TituloDTOResponse cadastrar(String descricao) {
-        if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException("A descrição não pode ser nula ou vazia");
-        }
 
         TituloEntity titulo = new TituloEntity();
         titulo.setDescricao(descricao);
 
-        tituloRepository.save(titulo);
+        TituloEntity tituloPersistido = tituloRepository.save(titulo);
 
-        TituloDTOResponse response = new TituloDTOResponse(titulo.getId(), titulo.getDescricao());
+        TituloDTOResponse response = new TituloDTOResponse(tituloPersistido.getId(), tituloPersistido.getDescricao());
+        log.info("Cadastrando título: {}", descricao);
         return response;
     }
 
