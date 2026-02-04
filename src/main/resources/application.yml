@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: dev
+  main:
+    banner-mode: "off"
+  flyway:
+    enabled: false
+
+server:
+  servlet:
+    context-path: /api
+
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
