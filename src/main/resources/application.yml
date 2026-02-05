@@ -17,3 +17,10 @@ logging:
     com.sgerest: DEBUG
   pattern:
     console: "%d{HH:mm:ss} - %msg%n"
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
