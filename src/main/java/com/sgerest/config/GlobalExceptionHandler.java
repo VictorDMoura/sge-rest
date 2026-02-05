@@ -20,6 +20,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import lombok.extern.log4j.Log4j2;
 
 import com.sgerest.exception.ApiErrorResponse;
+import com.sgerest.exception.ArgumentNotFoundException;
 import com.sgerest.exception.TituloAlreadyExistsException;
 
 @ControllerAdvice
@@ -31,6 +32,13 @@ public class GlobalExceptionHandler {
 			TituloAlreadyExistsException ex, WebRequest request) {
 		log.warn("Titulo already exists exception: {}", ex.getMessage());
 		return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+	}
+
+	@ExceptionHandler(ArgumentNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleArgumentNotFoundException(
+			ArgumentNotFoundException ex, WebRequest request) {
+		log.warn("Argument not found exception: {}", ex.getMessage());
+		return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
