@@ -11,6 +11,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.entities.TituloEntity;
@@ -97,5 +103,35 @@ class TituloServiceTest {
         });
         assertEquals("Título com ID 99 não encontrado.", exception.getMessage());
         verify(tituloRepository).findById(idInexistente);
+    }
+
+    @Test
+    @DisplayName("Deve listar títulos com paginação")
+    void testListarTodosComPaginacao() {
+        Pageable pageable = PageRequest.of(0, 10);
+        java.util.List<TituloEntity> titulos = java.util.List.of(tituloEntity);
+        Page<TituloEntity> pagina = new PageImpl<>(
+                titulos, pageable, titulos.size());
+        when(tituloRepository.findAll(pageable)).thenReturn(pagina);
+        var response = tituloService.listarTodos(pageable);
+        assertNotNull(response);
+        assertEquals(1, response.totalElements());
+        assertEquals(1, response.content().size());
+        assertEquals(tituloEntity.getId(), response.content().get(0).id());
+        verify(tituloRepository).findAll(pageable);
+    }
+
+    @Test
+    @DisplayName("Deve retornar página vazia quando não houver títulos")
+    void testListarTodosSemTítulos() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<TituloEntity> paginaVazia = new PageImpl<>(
+                List.of(), pageable, 0);
+        when(tituloRepository.findAll(pageable)).thenReturn(paginaVazia);
+        var response = tituloService.listarTodos(pageable);
+        assertNotNull(response);
+        assertEquals(0, response.totalElements());
+        assertTrue(response.content().isEmpty());
+        verify(tituloRepository).findAll(pageable);
     }
 }

@@ -2,9 +2,12 @@ package com.sgerest.domain.services;
 
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sgerest.controller.DTO.PageResponse;
 import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.entities.TituloEntity;
 import com.sgerest.domain.repository.TituloRepository;
@@ -37,7 +40,7 @@ public class TituloService {
 
         TituloEntity tituloPersistido = tituloRepository.save(titulo);
 
-        TituloDTOResponse response = new TituloDTOResponse(tituloPersistido.getId(), tituloPersistido.getDescricao());
+        TituloDTOResponse response = mapToDTO(tituloPersistido);
         log.info("Título cadastrado com sucesso. ID: {}", response.id());
         return response;
     }
@@ -51,10 +54,25 @@ public class TituloService {
                     return new ArgumentNotFoundException("Título com ID " + id + " não encontrado.");
                 });
 
-        TituloDTOResponse response = new TituloDTOResponse(titulo.getId(), titulo.getDescricao());
+        TituloDTOResponse response = mapToDTO(titulo);
         log.info("Título encontrado: {}", response);
         return response;
 
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TituloDTOResponse> listarTodos(Pageable pageable) {
+        log.info("Listando todos os títulos com paginação: {}", pageable);
+        Page<TituloEntity> titulosPage = tituloRepository.findAll(pageable);
+
+        Page<TituloDTOResponse> responsePage = titulosPage.map(this::mapToDTO);
+
+        log.info("Total de títulos encontrados: {}", responsePage.getTotalElements());
+        return PageResponse.of(responsePage);
+    }
+
+    private TituloDTOResponse mapToDTO(TituloEntity titulo) {
+        return new TituloDTOResponse(titulo.getId(), titulo.getDescricao());
     }
 
 }

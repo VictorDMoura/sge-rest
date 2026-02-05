@@ -171,4 +171,28 @@ class TituloControllerIT {
                 .andExpect(jsonPath("$.id", equalTo(id.intValue())))
                 .andExpect(jsonPath("$.descricao", equalTo("Título Existente")));
     }
+
+    @Test
+    @DisplayName("Deve listar títulos com paginação")
+    void testListarTitulosComPaginacao() throws Exception {
+        for (int i = 1; i <= 15; i++) {
+            TituloDTORequest request = new TituloDTORequest("Título " + i);
+            mockMvc.perform(post("/v1/titulos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(get("/v1/titulos")
+                .param("page", "0")
+                .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(10)))
+                .andExpect(jsonPath("$.totalElements", equalTo(15)))
+                .andExpect(jsonPath("$.totalPages", equalTo(2)))
+                .andExpect(jsonPath("$.pageNumber", equalTo(0)))
+                .andExpect(jsonPath("$.pageSize", equalTo(10)))
+                .andExpect(jsonPath("$.hasNext", equalTo(true)))
+                .andExpect(jsonPath("$.hasPrevious", equalTo(false)));
+    }
 }

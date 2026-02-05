@@ -2,6 +2,7 @@ package com.sgerest.controller;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
+import com.sgerest.controller.DTO.PageResponse;
 import com.sgerest.controller.DTO.titulo.TituloDTORequest;
 import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.services.TituloService;
@@ -41,6 +43,12 @@ public class TituloController {
     @GetMapping("/{id}")
     public ResponseEntity<TituloDTOResponse> getById(@PathVariable Long id) {
         var response = tituloService.getById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PageResponse<TituloDTOResponse>> getAll(Pageable pageable) {
+        var response = tituloService.listarTodos(pageable);
         return ResponseEntity.ok(response);
     }
 
