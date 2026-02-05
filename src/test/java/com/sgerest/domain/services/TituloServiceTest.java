@@ -74,4 +74,28 @@ class TituloServiceTest {
         assertEquals("Título com descrição 'Título Existente' já existe.", exception.getMessage());
         verify(tituloRepository, never()).save(any(TituloEntity.class));
     }
+
+    @Test
+    @DisplayName("Deve buscar título por ID com sucesso")
+    void testGetByIdComSucesso() {
+        Long id = 1L;
+        when(tituloRepository.findById(id)).thenReturn(java.util.Optional.of(tituloEntity));
+        TituloDTOResponse response = tituloService.getById(id);
+        assertNotNull(response);
+        assertEquals(id, response.id());
+        assertEquals("Título Teste", response.descricao());
+        verify(tituloRepository).findById(id);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao buscar título por ID inexistente")
+    void testGetByIdInexistente() {
+        Long idInexistente = 99L;
+        when(tituloRepository.findById(idInexistente)).thenReturn(java.util.Optional.empty());
+        var exception = assertThrows(com.sgerest.exception.ArgumentNotFoundException.class, () -> {
+            tituloService.getById(idInexistente);
+        });
+        assertEquals("Título com ID 99 não encontrado.", exception.getMessage());
+        verify(tituloRepository).findById(idInexistente);
+    }
 }

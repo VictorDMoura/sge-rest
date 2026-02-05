@@ -1,14 +1,15 @@
 package com.sgerest.domain.services;
 
-import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.entities.TituloEntity;
 import com.sgerest.domain.repository.TituloRepository;
 import com.sgerest.exception.TituloAlreadyExistsException;
+import com.sgerest.exception.ArgumentNotFoundException;
 
 @Service
 @Log4j2
@@ -20,9 +21,11 @@ public class TituloService {
         this.tituloRepository = tituloRepository;
     }
 
-    @Transactional(rollbackOn = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public TituloDTOResponse cadastrar(String descricao) {
         log.info("Cadastrando título com descrição: {}", descricao);
+
+        descricao = descricao.trim();
 
         if (tituloRepository.existsByDescricaoIgnoreCase(descricao)) {
             log.warn("Título com descrição '{}' já existe.", descricao);
@@ -37,6 +40,21 @@ public class TituloService {
         TituloDTOResponse response = new TituloDTOResponse(tituloPersistido.getId(), tituloPersistido.getDescricao());
         log.info("Título cadastrado com sucesso. ID: {}", response.id());
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public TituloDTOResponse getById(Long id) {
+        log.info("Buscando título com ID: {}", id);
+        TituloEntity titulo = tituloRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Título com ID {} não encontrado.", id);
+                    return new ArgumentNotFoundException("Título com ID " + id + " não encontrado.");
+                });
+
+        TituloDTOResponse response = new TituloDTOResponse(titulo.getId(), titulo.getDescricao());
+        log.info("Título encontrado: {}", response);
+        return response;
+
     }
 
 }

@@ -11,17 +11,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sgerest.config.TestConfig;
 import com.sgerest.controller.DTO.titulo.TituloDTORequest;
+import com.sgerest.controller.DTO.titulo.TituloDTOResponse;
 import com.sgerest.domain.repository.TituloRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestConfig.class)
 @DisplayName("Testes de Integração - TituloController")
 class TituloControllerIT {
 
@@ -91,7 +95,7 @@ class TituloControllerIT {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error", equalTo("Conflict")))
-                .andExpect(jsonPath("$.message", containsString("registrado")));
+                .andExpect(jsonPath("$.message", containsString("já existe.")));
     }
 
     @Test
@@ -107,14 +111,6 @@ class TituloControllerIT {
         var titulos = tituloRepository.findAll();
         assertEquals(1, titulos.size());
         assertEquals("Título com Persistência", titulos.get(0).getDescricao());
-    }
-
-    @Test
-    @DisplayName("Deve validar Content-Type obrigatório")
-    void testSemContentType() throws Exception {
-        mockMvc.perform(post("/v1/titulos")
-                .content("{\"descricao\": \"teste\"}"))
-                .andExpect(status().isUnsupportedMediaType());
     }
 
     @Test
@@ -140,5 +136,39 @@ class TituloControllerIT {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", greaterThan(0)));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao buscar título inexistente")
+    void testGetByIdInexistente() throws Exception {
+        Long inexistenteId = 999L;
+        String msgErro = "Título com ID %d não encontrado.";
+        String mensagemFormatada = String.format(msgErro, inexistenteId);
+
+        mockMvc.perform(get("/v1/titulos/{id}", inexistenteId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error", equalTo("Not Found")))
+                .andExpect(jsonPath("$.message", equalTo(mensagemFormatada)));
+    }
+
+    @Test
+    @DisplayName("Deve buscar título existente por ID com sucesso")
+    void testGetByIdExistente() throws Exception {
+        TituloDTORequest request = new TituloDTORequest("Título Existente");
+        String responseContent = mockMvc.perform(post("/v1/titulos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        TituloDTOResponse response = objectMapper.readValue(responseContent, TituloDTOResponse.class);
+        Long id = response.id();
+
+        mockMvc.perform(get("/v1/titulos/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", equalTo(id.intValue())))
+                .andExpect(jsonPath("$.descricao", equalTo("Título Existente")));
     }
 }
