@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -122,6 +123,13 @@ public class GlobalExceptionHandler {
 				"Internal Server Error",
 				"Ocorreu um erro inesperado",
 				request);
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleNoResourceException(
+			NoResourceFoundException ex, WebRequest request) {
+		log.warn("No resource exception: {}", ex.getMessage());
+		return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
 	}
 
 	private ResponseEntity<ApiErrorResponse> buildResponse(
