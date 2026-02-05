@@ -71,6 +71,44 @@ public class TituloService {
         return PageResponse.of(responsePage);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public TituloDTOResponse atualizar(Long id, String descricao) {
+        log.info("Atualizando título com ID: {}", id);
+        TituloEntity titulo = tituloRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Título com ID {} não encontrado para atualização.", id);
+                    return new ArgumentNotFoundException("Título com ID " + id + " não encontrado.");
+                });
+
+        descricao = descricao.trim();
+
+        if (tituloRepository.existsByDescricaoIgnoreCase(descricao) &&
+                !titulo.getDescricao().equalsIgnoreCase(descricao)) {
+            log.warn("Título com descrição '{}' já existe.", descricao);
+            throw new TituloAlreadyExistsException(descricao);
+        }
+
+        titulo.setDescricao(descricao);
+        TituloEntity tituloAtualizado = tituloRepository.save(titulo);
+
+        TituloDTOResponse response = mapToDTO(tituloAtualizado);
+        log.info("Título atualizado com sucesso. ID: {}", response.id());
+        return response;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deletar(Long id) {
+        log.info("Deletando título com ID: {}", id);
+        TituloEntity titulo = tituloRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Título com ID {} não encontrado para deleção.", id);
+                    return new ArgumentNotFoundException("Título com ID " + id + " não encontrado.");
+                });
+
+        tituloRepository.delete(titulo);
+        log.info("Título com ID {} deletado com sucesso.", id);
+    }
+
     private TituloDTOResponse mapToDTO(TituloEntity titulo) {
         return new TituloDTOResponse(titulo.getId(), titulo.getDescricao());
     }

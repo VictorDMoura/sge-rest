@@ -172,15 +172,23 @@ class TituloControllerIT {
                 .andExpect(jsonPath("$.descricao", equalTo("Título Existente")));
     }
 
+    /**
+     * Helper de criação de título que valida o sucesso da operação.
+     */
+    private void criarTituloOuFalhar(String descricao) throws Exception {
+        TituloDTORequest request = new TituloDTORequest(descricao);
+        mockMvc.perform(post("/v1/titulos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()));
+    }
+
     @Test
     @DisplayName("Deve listar títulos com paginação")
     void testListarTitulosComPaginacao() throws Exception {
         for (int i = 1; i <= 15; i++) {
-            TituloDTORequest request = new TituloDTORequest("Título " + i);
-            mockMvc.perform(post("/v1/titulos")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isCreated());
+            criarTituloOuFalhar("Título " + i);
         }
 
         mockMvc.perform(get("/v1/titulos")
@@ -195,4 +203,76 @@ class TituloControllerIT {
                 .andExpect(jsonPath("$.hasNext", equalTo(true)))
                 .andExpect(jsonPath("$.hasPrevious", equalTo(false)));
     }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao atualizar título inexistente")
+    void testAtualizarTituloInexistente() throws Exception {
+        Long idInexistente = 999L;
+        String json = "{\"descricao\": \"Título Atualizado\"}";
+        String msgErro = "Título com ID %d não encontrado.";
+        String mensagemFormatada = String.format(msgErro, idInexistente);
+
+        mockMvc.perform(put("/v1/titulos/{id}", idInexistente)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error", equalTo("Not Found")))
+                .andExpect(jsonPath("$.message", equalTo(mensagemFormatada)));
+    }
+
+    @Test
+    @DisplayName("Deve atualizar título existente com sucesso")
+    void testAtualizarTituloExistente() throws Exception {
+        TituloDTORequest request = new TituloDTORequest("Título para Atualizar");
+        String responseContent = mockMvc.perform(post("/v1/titulos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        TituloDTOResponse response = objectMapper.readValue(responseContent, TituloDTOResponse.class);
+        Long id = response.id();
+        String json = "{\"descricao\": \"Título Atualizado\"}";
+        mockMvc.perform(put("/v1/titulos/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", equalTo(id.intValue())))
+                .andExpect(jsonPath("$.descricao", equalTo("Título Atualizado")));
+    }
+
+    @Test
+    @DisplayName("Deve deletar título existente com sucesso")
+    void testDeletarTituloExistente() throws Exception {
+        TituloDTORequest request = new TituloDTORequest("Título para Deletar");
+        String responseContent = mockMvc.perform(post("/v1/titulos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        TituloDTOResponse response = objectMapper.readValue(responseContent, TituloDTOResponse.class);
+        Long id = response.id();
+        mockMvc.perform(delete("/v1/titulos/{id}", id))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/v1/titulos/{id}", id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao deletar título inexistente")
+    void testDeletarTituloInexistente() throws Exception {
+        Long idInexistente = 999L;
+        String msgErro = "Título com ID %d não encontrado.";
+        String mensagemFormatada = String.format(msgErro, idInexistente);
+
+        mockMvc.perform(delete("/v1/titulos/{id}", idInexistente))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error", equalTo("Not Found")))
+                .andExpect(jsonPath("$.message", equalTo(mensagemFormatada)));
+    }
+
 }
